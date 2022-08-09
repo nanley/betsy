@@ -96,7 +96,7 @@ void OptimizeColorsBlock( const uint srcPixelsBlock[16], out float outMinEndp16,
 	avgColour = minColour = maxColour = unpackUnorm4x8( srcPixelsBlock[0] ).xyz;
 	for( int i = 1; i < 16; ++i )
 	{
-		const float3 currColourUnorm = unpackUnorm4x8( srcPixelsBlock[i] ).xyz;
+		float3 currColourUnorm = unpackUnorm4x8( srcPixelsBlock[i] ).xyz;
 		avgColour += currColourUnorm;
 		minColour = min( minColour, currColourUnorm );
 		maxColour = max( maxColour, currColourUnorm );
@@ -113,7 +113,7 @@ void OptimizeColorsBlock( const uint srcPixelsBlock[16], out float outMinEndp16,
 
 	for( int i = 0; i < 16; ++i )
 	{
-		const float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
+		float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
 		float3 rgbDiff = currColour - avgColour;
 
 		cov[0] += rgbDiff.r * rgbDiff.r;
@@ -133,9 +133,9 @@ void OptimizeColorsBlock( const uint srcPixelsBlock[16], out float outMinEndp16,
 	const int nIterPower = 4;
 	for( int iter = 0; iter < nIterPower; ++iter )
 	{
-		const float r = vF.r * cov[0] + vF.g * cov[1] + vF.b * cov[2];
-		const float g = vF.r * cov[1] + vF.g * cov[3] + vF.b * cov[4];
-		const float b = vF.r * cov[2] + vF.g * cov[4] + vF.b * cov[5];
+		float r = vF.r * cov[0] + vF.g * cov[1] + vF.b * cov[2];
+		float g = vF.r * cov[1] + vF.g * cov[3] + vF.b * cov[4];
+		float b = vF.r * cov[2] + vF.g * cov[4] + vF.b * cov[5];
 
 		vF.r = r;
 		vF.g = g;
@@ -162,8 +162,8 @@ void OptimizeColorsBlock( const uint srcPixelsBlock[16], out float outMinEndp16,
 	float maxDot = -FLT_MAX;
 	for( int i = 0; i < 16; ++i )
 	{
-		const float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
-		const float dotValue = dot( currColour, v );
+		float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
+		float dotValue = dot( currColour, v );
 
 		if( dotValue < minDot )
 		{
@@ -208,9 +208,9 @@ uint MatchColorsBlock( const uint srcPixelsBlock[16], float3 colour[4] )
 	// the version without dithering is straightforward
 	for( uint i = 16u; i-- > 0u; )
 	{
-		const float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
+		float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
 
-		const float dotValue = dot( currColour, dir );
+		float dotValue = dot( currColour, dir );
 		mask <<= 2u;
 
 		if( dotValue < halfPoint )
@@ -298,8 +298,8 @@ bool RefineBlock( const uint srcPixelsBlock[16], uint mask, inout float inOutMin
 				  inout float inOutMaxEndp16 )
 {
 	float newMin16, newMax16;
-	const float oldMin = inOutMinEndp16;
-	const float oldMax = inOutMaxEndp16;
+	float oldMin = inOutMinEndp16;
+	float oldMax = inOutMaxEndp16;
 
 	if( ( mask ^ ( mask << 2u ) ) < 4u )  // all pixels have the same index?
 	{
@@ -332,10 +332,10 @@ bool RefineBlock( const uint srcPixelsBlock[16], uint mask, inout float inOutMin
 		float3 at2 = float3( 0, 0, 0 );
 		for( int i = 0; i < 16; ++i, cm >>= 2u )
 		{
-			const float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
+			float3 currColour = unpackUnorm4x8( srcPixelsBlock[i] ).xyz * 255.0f;
 
-			const uint step = cm & 3u;
-			const float w1 = w1Tab[step];
+			uint step = cm & 3u;
+			float w1 = w1Tab[step];
 			akku += prods[step];
 			at1 += currColour * w1;
 			at2 += currColour;
@@ -344,20 +344,20 @@ bool RefineBlock( const uint srcPixelsBlock[16], uint mask, inout float inOutMin
 		at2 = 3.0f * at2 - at1;
 
 		// extract solutions and decide solvability
-		const float xx = floor( akku / 65535.0f );
-		const float yy = floor( mod( akku, 65535.0f ) / 256.0f );
-		const float xy = mod( akku, 256.0f );
+		float xx = floor( akku / 65535.0f );
+		float yy = floor( mod( akku, 65535.0f ) / 256.0f );
+		float xy = mod( akku, 256.0f );
 
 		float2 f_rb_g;
 		f_rb_g.x = 3.0f * 31.0f / 255.0f / ( xx * yy - xy * xy );
 		f_rb_g.y = f_rb_g.x * 63.0f / 31.0f;
 
 		// solve.
-		const float3 newMaxVal = clamp( floor( ( at1 * yy - at2 * xy ) * f_rb_g.xyx + 0.5f ),
+		float3 newMaxVal = clamp( floor( ( at1 * yy - at2 * xy ) * f_rb_g.xyx + 0.5f ),
 										float3( 0.0f, 0.0f, 0.0f ), float3( 31, 63, 31 ) );
 		newMax16 = newMaxVal.x * 2048.0f + newMaxVal.y * 32.0f + newMaxVal.z;
 
-		const float3 newMinVal = clamp( floor( ( at2 * xx - at1 * xy ) * f_rb_g.xyx + 0.5f ),
+		float3 newMinVal = clamp( floor( ( at2 * xx - at1 * xy ) * f_rb_g.xyx + 0.5f ),
 										float3( 0.0f, 0.0f, 0.0f ), float3( 31, 63, 31 ) );
 		newMin16 = newMinVal.x * 2048.0f + newMinVal.y * 32.0f + newMinVal.z;
 	}
@@ -431,11 +431,11 @@ void main()
 	bool bAllColoursEqual = true;
 
 	// Load the whole 4x4 block
-	const uint2 pixelsToLoadBase = gl_GlobalInvocationID.xy << 2u;
+	uint2 pixelsToLoadBase = gl_GlobalInvocationID.xy << 2u;
 	for( uint i = 0u; i < 16u; ++i )
 	{
-		const uint2 pixelsToLoad = pixelsToLoadBase + uint2( i & 0x03u, i >> 2u );
-		const float3 srcPixels0 = OGRE_Load2D( srcTex, int2( pixelsToLoad ), 0 ).xyz;
+		uint2 pixelsToLoad = pixelsToLoadBase + uint2( i & 0x03u, i >> 2u );
+		float3 srcPixels0 = OGRE_Load2D( srcTex, int2( pixelsToLoad ), 0 ).xyz;
 		srcPixelsBlock[i] = packUnorm4x8( float4( srcPixels0, 1.0f ) );
 		bAllColoursEqual = bAllColoursEqual && srcPixelsBlock[0] == srcPixelsBlock[i];
 	}
@@ -445,7 +445,7 @@ void main()
 
 	if( bAllColoursEqual )
 	{
-		const uint3 rgbVal = uint3( unpackUnorm4x8( srcPixelsBlock[0] ).xyz * 255.0f );
+		uint3 rgbVal = uint3( unpackUnorm4x8( srcPixelsBlock[0] ).xyz * 255.0f );
 		mask = 0xAAAAAAAAu;
 		maxEndp16 =
 			c_oMatch5[rgbVal.r][0] * 2048.0f + c_oMatch6[rgbVal.g][0] * 32.0f + c_oMatch5[rgbVal.b][0];
@@ -475,7 +475,7 @@ void main()
 		bool bStopRefinement = false;
 		for( uint i = 0u; i < p_numRefinements && !bStopRefinement; ++i )
 		{
-			const uint lastMask = mask;
+			uint lastMask = mask;
 
 			if( RefineBlock( ditherPixelsBlock, mask, minEndp16, maxEndp16 ) )
 			{
@@ -499,7 +499,7 @@ void main()
 	// write the color block
 	if( maxEndp16 < minEndp16 )
 	{
-		const float tmpValue = minEndp16;
+		float tmpValue = minEndp16;
 		minEndp16 = maxEndp16;
 		maxEndp16 = tmpValue;
 		mask ^= 0x55555555u;

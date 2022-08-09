@@ -38,15 +38,15 @@ void main()
 	float minVal, maxVal;
 	float4 srcPixel;
 
-	const uint blockThreadId = gl_LocalInvocationID.x;
+	uint blockThreadId = gl_LocalInvocationID.x;
 
-	const uint2 pixelsToLoadBase = gl_GlobalInvocationID.yz << 2u;
+	uint2 pixelsToLoadBase = gl_GlobalInvocationID.yz << 2u;
 
 	for( uint i = 0u; i < 4u; ++i )
 	{
-		const uint2 pixelsToLoad = pixelsToLoadBase + uint2( i, blockThreadId );
+		uint2 pixelsToLoad = pixelsToLoadBase + uint2( i, blockThreadId );
 
-		const float4 value = OGRE_Load2D( srcTex, int2( pixelsToLoad ), 0 ).xyzw;
+		float4 value = OGRE_Load2D( srcTex, int2( pixelsToLoad ), 0 ).xyzw;
 		srcPixel[i] = p_channelIdx == 0 ? value.x : ( p_channelIdx == 1 ? value.y : value.w );
 		srcPixel[i] *= 255.0f;
 	}
@@ -56,8 +56,8 @@ void main()
 	minVal = min( minVal, srcPixel.w );
 	maxVal = max( maxVal, srcPixel.w );
 
-	const uint minMaxIdxBase = ( gl_LocalInvocationID.z << 4u ) + ( gl_LocalInvocationID.y << 2u );
-	const uint maskIdxBase = ( gl_LocalInvocationID.z << 2u ) + gl_LocalInvocationID.y;
+	uint minMaxIdxBase = ( gl_LocalInvocationID.z << 4u ) + ( gl_LocalInvocationID.y << 2u );
+	uint maskIdxBase = ( gl_LocalInvocationID.z << 2u ) + gl_LocalInvocationID.y;
 
 	g_minMaxValues[minMaxIdxBase + blockThreadId] = float2( minVal, maxVal );
 	g_mask[maskIdxBase] = uint2( 0u, 0u );
@@ -109,7 +109,7 @@ void main()
 		ind ^= ( 2 > ind ) ? 1 : 0;
 
 		// write index
-		const uint bits = 16u + ( ( blockThreadId << 2u ) + i ) * 3u;
+		uint bits = 16u + ( ( blockThreadId << 2u ) + i ) * 3u;
 		if( bits < 32u )
 		{
 			mask0 |= uint( ind ) << bits;

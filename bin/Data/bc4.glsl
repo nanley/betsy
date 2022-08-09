@@ -1,4 +1,4 @@
-#version 430 core
+#version 310 es
 
 // #include "/media/matias/Datos/SyntaxHighlightingMisc.h"
 

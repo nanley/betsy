@@ -119,7 +119,7 @@ namespace betsy
 		bindUav( 0u, m_bc1TargetRes, PFG_RG32_UINT, ResourceAccess::Write );
 		bindUavBuffer( 1u, m_bc1TablesSsbo, 0u, sizeof( Bc1Tables ) );
 
-		glUniform1ui( 0, 2u );
+		glUniform1ui( glGetUniformLocation( m_bc1Pso.computePso, "p_numRefinements" ), 2u );
 
 		glDispatchCompute( alignToNextMultiple( m_width, ( 8u * 4u ) ) / ( 8u * 4u ),
 						   alignToNextMultiple( m_height, ( 8u * 4u ) ) / ( 8u * 4u ), 1u );
